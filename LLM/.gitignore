@@ -1,7 +1,0 @@
-.env
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-.vscode/
-
-# 这个文件告诉 Git：“忽略掉 .env，不要把它传上去。”
