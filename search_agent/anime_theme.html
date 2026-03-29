@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <title>二次元检索 Agent · 超透版 🌸</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root {
+      /* 二次元高明度主题色 */
+      --primary-color: #ff9a9e;
+      --secondary-color: #fecfef;
+      --accent-color: #a1c4fd;
+
+      /* 🌟【修改】调整默认文字颜色，提高对比度 */
+      --text-main: #4a4a4a;
+
+      /* 🌟【修改】大幅降低全局毛玻璃层的白色浓度，从 0.45 降到 0.2 */
+      --glass-bg: rgba(255, 255, 255, 0.2);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      --glass-shadow: 0 8px 32px rgba(255, 154, 158, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Nunito', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      /* 这里保持你的背景图设置 */
+      background: url('/static/girl.png') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+    }
+
+    /* 整体毛玻璃容器 */
+    #app-container {
+      width: 90%;
+      max-width: 1200px;
+      height: 85vh;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    /* ✅ 彻底移除毛玻璃 blur：#app-container 以及所有子容器 */
+    #app-container,
+    #app-container * {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* ✅ 容器背景完全透明，让背景图 100% 清晰透出 */
+    #app-container {
+      background: transparent !important;
+    }
+
+    .chat-section,
+    .upload-section,
+    .input-section,
+    #userInput,
+    #userInput:focus,
+    .file-input-label,
+    .file-input-label:hover,
+    .file-name,
+    #uploadStatus,
+    #uploadStatus.success,
+    #uploadStatus.error,
+    #uploadStatus.loading {
+      background: transparent !important;
+    }
+
+    /* ✅ 花哨背景下的可读性：聊天气泡 + 全界面文字统一加深色阴影 */
+    #app-container,
+    #app-container * {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85) !important;
+    }
+
+    #app-container ::placeholder {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85) !important;
+    }
+
+    /* 左侧：聊天主界面 */
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      /* 🌟【核心修改 1】彻底移除内层容器的背景色，露出底层背景图 */
+      background: transparent;
+
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+    }
+
+    .header {
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255,154,158,0.7) 0%, rgba(254,207,239,0.7) 100%);
+      color: white;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header h1 { font-size: 24px; letter-spacing: 2px; }
+    .header p { font-size: 13px; margin-top: 5px; opacity: 0.9; }
+
+    .chat-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* 滚动条美化 */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,154,158,0.5); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,154,158,0.8); }
+
+    /* 气泡样式 */
+    .bubble {
+      padding: 12px 18px;
+      border-radius: 20px;
+      max-width: 80%;
+      line-height: 1.6;
+      font-size: 15px;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.9) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .user {
+      /* 用户气泡保留主题色以区分，但稍微调低一点浓度 */
+      background: linear-gradient(135deg, rgba(161, 196, 253, 0.8) 0%, rgba(194, 233, 251, 0.8) 100%);
+      color: #3b5998;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+      font-weight: 500;
+    }
+
+    .bot {
+      /* 🌟【核心修改 2】大幅调低 Bot 气泡背景的白色浓度，从 0.9 降到 0.25 */
+      background: rgba(255, 255, 255, 0.25);
+
+      /* 🌟【核心修改 3】加深文字颜色，并增加文字阴影以保持可读性 */
+      color: #333333;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+    }
+
+    /* 输入区域 */
+    .input-section {
+      padding: 15px;
+
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 12px 20px;
+      border: 2px solid transparent;
+      border-radius: 25px;
+
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+      color: var(--text-main);
+    }
+
+    #userInput:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 10px rgba(255,154,158,0.3);
+    }
+
+    button {
+      padding: 0 25px;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255,154,158,0.4);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,154,158,0.6);
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* 右侧：侧边栏（知识库上传） */
+    .upload-section {
+      width: 300px;
+
+      /* 🌟【核心修改 1】同样彻底移除内层容器背景色 */
+      background: transparent;
+
+      border-radius: 20px;
+      padding: 25px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+
+      /* 🌟【修改】这里不加外边框，让它通过 app-container 的内间距和主聊天区区分 */
+      border: none;
+    }
+
+    .upload-section h3 {
+      font-size: 18px;
+      color: #ff758c;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .upload-section p { font-size: 12px; color: #888; text-align: center; line-height: 1.5; }
+
+    .file-input-wrapper { position: relative; margin-top: 10px; }
+    .file-input-wrapper input[type="file"] { display: none; }
+
+    .file-input-label {
+      display: block;
+      padding: 30px 15px;
+
+      border: 2px dashed var(--accent-color);
+      border-radius: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+      color: #7b9acc;
+      font-weight: bold;
+    }
+
+    .file-input-label:hover {
+      border-color: #ff9a9e;
+      color: #ff9a9e;
+    }
+
+    .file-name {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #ff758c;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .upload-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, var(--accent-color) 0%, #c2e9fb 100%);
+      box-shadow: 0 4px 15px rgba(161, 196, 253, 0.4);
+    }
+
+    #uploadStatus {
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    #uploadStatus.success { background: rgba(212, 237, 218, 0.8); color: #155724; }
+    #uploadStatus.error { background: rgba(248, 215, 218, 0.8); color: #721c24; }
+    #uploadStatus.loading { background: rgba(209, 236, 241, 0.8); color: #0c5460; }
+
+    /* 响应式布局保持 */
+    @media (max-width: 900px) {
+      #app-container { flex-direction: column; height: 95vh; padding: 10px; }
+      .upload-section { width: 100%; padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <div class="chat-section">
+      <div class="header">
+        <h1>✨ AI 检索小助手 ✨</h1>
+        <p>内外网混合双打 · 懂你所需的智能系统</p>
+      </div>
+      <div id="log" class="chat-log"></div>
+      <div class="input-section">
+        <input id="userInput" type="text" placeholder="米娜桑，有什么问题都可以问我哦~ (输入内容)" />
+        <button id="sendBtn">发 送</button>
+      </div>
+    </div>
+    <div class="upload-section">
+      <h3>📚 投喂知识库</h3>
+      <p>支持 txt、md、pdf 格式<br>让我变得更聪明吧！</p>
+      <div class="file-input-wrapper">
+        <input id="fileInput" type="file" accept=".txt,.md,.pdf" />
+        <label for="fileInput" class="file-input-label" id="dropZone">
+          🌸 点击或拖拽文件到这里
+        </label>
+        <div id="fileName" class="file-name" style="display: none;"></div>
+      </div>
+      <button id="uploadBtn" class="upload-btn">⚡ 注入灵魂 (上传)</button>
+      <div id="uploadStatus"></div>
+    </div>
+  </div>
+  <script>
+    // 这里是完全相同的 JavaScript 逻辑
+    const log = document.getElementById("log");
+    const input = document.getElementById("userInput");
+    const btn = document.getElementById("sendBtn");
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const statusLabel = document.getElementById("uploadStatus");
+    const fileNameDiv = document.getElementById("fileName");
+
+    function appendBubble(text, cls) {
+      const div = document.createElement("div");
+      div.className = "bubble " + cls;
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    btn.addEventListener("click", async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      appendBubble(text, "user");
+      input.value = "";
+      btn.disabled = true;
+
+      const session_id = "ui-session";
+      try {
+        const resp = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id, input: text, stream: false })
+        });
+        const data = await resp.json();
+        appendBubble(data.output || "哎呀，网络似乎开小差了呢~", "bot");
+      } catch (e) {
+        appendBubble("报错啦：" + e.message, "bot");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files[0];
+      if (f) {
+        fileNameDiv.textContent = "已选中: " + f.name;
+        fileNameDiv.style.display = "block";
+      }
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      const f = fileInput.files[0];
+      if (!f) {
+        statusLabel.textContent = "请先选择一个文件哦！";
+        statusLabel.className = "error";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", f);
+
+      uploadBtn.disabled = true;
+      statusLabel.textContent = "正在努力吸收知识中… 💦";
+      statusLabel.className = "loading";
+
+      try {
+        const resp = await fetch("/api/upload_vector_file", {
+          method: "POST",
+          body: formData
+        });
+        const res = await resp.json();
+
+        if (res.status === "ok") {
+          const count = res.import?.count || 0;
+          statusLabel.innerHTML = `🎉 成功吸收了 ${count} 条知识！`;
+          statusLabel.className = "success";
+          fileInput.value = "";
+          fileNameDiv.style.display = "none";
+        } else {
+          statusLabel.textContent = "吸收失败了：" + (res.detail || "未知错误");
+          statusLabel.className = "error";
+        }
+      } catch (e) {
+        statusLabel.textContent = "出错了：" + e.message;
+        statusLabel.className = "error";
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+
+    const label = document.getElementById("dropZone");
+    ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+      label.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    ["dragenter", "dragover"].forEach(eventName => {
+      label.addEventListener(eventName, () => {
+        label.style.background = "rgba(255,154,158,0.2)";
+        label.style.transform = "scale(1.02)";
+      });
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+      label.addEventListener(eventName, () => {
+        label.style.background = "rgba(255,255,255,0.7)";
+        label.style.transform = "scale(1)";
+      });
+    });
+
+    label.addEventListener("drop", (e) => {
+      fileInput.files = e.dataTransfer.files;
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    // 初始化欢迎语
+    setTimeout(() => {
+      appendBubble("主人你好！我是你的二次元检索 Agent 🌸\n有什么想问的，或者需要投喂资料，都可以交给我哦！", "bot");
+    }, 300);
+  </script>
+</body>
+</html>
